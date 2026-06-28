@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { getProductById, updateProduct, uploadProductImage } from '@/lib/products';
+import { getProductById, updateProduct } from '@/lib/products';
 import { Product, CATEGORIES, STORE_NAMES } from '@/types';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
@@ -13,17 +13,18 @@ export default function EditProductPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
   const [form, setForm] = useState({
     productName: '',
     category: '',
     storeName: 'Amazon' as 'Amazon' | 'Flipkart' | 'IKEA' | 'Other',
     productLink: '',
+    imageUrl: '',
     description: '',
     price: '',
     status: 'active' as 'active' | 'hidden',
   });
+
+  const isValidUrl = (url: string) => url.startsWith('http://') || url.startsWith('https://');
 
   useEffect(() => {
     const load = async () => {
@@ -35,35 +36,26 @@ export default function EditProductPage() {
         category: p.category,
         storeName: p.storeName,
         productLink: p.productLink,
+        imageUrl: p.imageUrl,
         description: p.description || '',
         price: p.price || '',
         status: p.status,
       });
-      setImagePreview(p.imageUrl);
       setLoading(false);
     };
     load();
   }, [id, router]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5 MB'); return; }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.productLink.startsWith('http')) { toast.error('Product link must start with http:// or https://'); return; }
+    if (!isValidUrl(form.productLink)) { toast.error('Product link must start with http:// or https://'); return; }
+    if (!isValidUrl(form.imageUrl)) { toast.error('Image URL must start with http:// or https://'); return; }
 
     setSaving(true);
     try {
-      let imageUrl = product!.imageUrl;
-      if (imageFile) { imageUrl = await uploadProductImage(imageFile); }
-      await updateProduct(id, { ...form, imageUrl });
+      await updateProduct(id, form);
       toast.success('Product updated successfully!');
       router.push('/admin/products');
     } catch (err) {
@@ -85,23 +77,22 @@ export default function EditProductPage() {
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.imageSection}>
-          <label className={styles.imageLabel}>Product Image</label>
+          <label className={styles.imageLabel}>Product Image URL</label>
           <div className={styles.imageUploadArea}>
-            {imagePreview ? (
+            {form.imageUrl && isValidUrl(form.imageUrl) ? (
               <div className={styles.imagePreview}>
-                <Image src={imagePreview} alt="Preview" fill className={styles.previewImg} />
-                <button type="button" onClick={() => { setImagePreview(''); setImageFile(null); }} className={styles.removeImg}>✕</button>
+                <Image src={form.imageUrl} alt="Preview" fill className={styles.previewImg} unoptimized />
+                <button type="button" onClick={() => set('imageUrl', '')} className={styles.removeImg}>✕</button>
               </div>
             ) : (
-              <label htmlFor="imageInput" className={styles.uploadPlaceholder}>
+              <div className={styles.uploadPlaceholder}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--taupe)" strokeWidth="1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
-                <span>Click to upload new image</span>
-                <span className={styles.uploadHint}>PNG, JPG, WEBP – max 5 MB</span>
-              </label>
+                <span>Paste an image URL below</span>
+                <span className={styles.uploadHint}>Use any direct image URL starting with https://</span>
+              </div>
             )}
-            <input id="imageInput" type="file" accept="image/*" onChange={handleImageChange} className={styles.hiddenInput} />
           </div>
         </div>
 
@@ -127,6 +118,10 @@ export default function EditProductPage() {
           <div className="form-group">
             <label className="form-label">Product Link *</label>
             <input type="url" className="form-input" value={form.productLink} onChange={e => set('productLink', e.target.value)} required />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Product Image URL *</label>
+            <input type="url" className="form-input" value={form.imageUrl} onChange={e => set('imageUrl', e.target.value)} required />
           </div>
           <div className="form-group">
             <label className="form-label">Short Description</label>

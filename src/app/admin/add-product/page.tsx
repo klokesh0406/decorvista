@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { addProduct, uploadProductImage } from '@/lib/products';
+import { addProduct } from '@/lib/products';
 import { CATEGORIES, STORE_NAMES } from '@/types';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
@@ -10,42 +10,34 @@ import styles from '../product-form.module.css';
 export default function AddProductPage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState('');
   const [form, setForm] = useState({
     productName: '',
     category: CATEGORIES[0].name,
     storeName: 'Amazon' as 'Amazon' | 'Flipkart' | 'IKEA' | 'Other',
     productLink: '',
+    imageUrl: '',
     description: '',
     price: '',
     status: 'active' as 'active' | 'hidden',
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5 MB'); return; }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const isValidUrl = (url: string) => url.startsWith('http://') || url.startsWith('https://');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile) { toast.error('Please upload a product image'); return; }
-    if (!form.productLink.startsWith('http')) { toast.error('Product link must start with http:// or https://'); return; }
+    if (!isValidUrl(form.productLink)) { toast.error('Product link must start with http:// or https://'); return; }
+    if (!isValidUrl(form.imageUrl)) { toast.error('Image URL must start with http:// or https://'); return; }
 
     setSaving(true);
     try {
-      const imageUrl = await uploadProductImage(imageFile);
-      await addProduct({ ...form, imageUrl });
+      await addProduct(form);
       toast.success('Product added successfully!');
       router.push('/admin/products');
     } catch (err) {
       console.error(err);
-      toast.error('Failed to add product. Please try again.');
+      toast.error('Failed to add product. Please check Firestore rules and try again.');
     } finally {
       setSaving(false);
     }
@@ -59,25 +51,24 @@ export default function AddProductPage() {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {/* Image Upload */}
+        {/* Image URL */}
         <div className={styles.imageSection}>
-          <label className={styles.imageLabel}>Product Image *</label>
+          <label className={styles.imageLabel}>Product Image URL *</label>
           <div className={styles.imageUploadArea}>
-            {imagePreview ? (
+            {form.imageUrl && isValidUrl(form.imageUrl) ? (
               <div className={styles.imagePreview}>
-                <Image src={imagePreview} alt="Preview" fill className={styles.previewImg} />
-                <button type="button" onClick={() => { setImagePreview(''); setImageFile(null); }} className={styles.removeImg}>✕</button>
+                <Image src={form.imageUrl} alt="Preview" fill className={styles.previewImg} unoptimized />
+                <button type="button" onClick={() => set('imageUrl', '')} className={styles.removeImg}>✕</button>
               </div>
             ) : (
-              <label htmlFor="imageInput" className={styles.uploadPlaceholder}>
+              <div className={styles.uploadPlaceholder}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--taupe)" strokeWidth="1.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
-                <span>Click to upload image</span>
-                <span className={styles.uploadHint}>PNG, JPG, WEBP – max 5 MB</span>
-              </label>
+                <span>Paste an image URL below</span>
+                <span className={styles.uploadHint}>Use any direct image URL starting with https://</span>
+              </div>
             )}
-            <input id="imageInput" type="file" accept="image/*" onChange={handleImageChange} className={styles.hiddenInput} />
           </div>
         </div>
 
@@ -106,6 +97,11 @@ export default function AddProductPage() {
           <div className="form-group">
             <label className="form-label" htmlFor="link">Product Link * <span className={styles.hint}>(Amazon / Flipkart / IKEA URL)</span></label>
             <input id="link" type="url" className="form-input" placeholder="https://www.amazon.in/product..." value={form.productLink} onChange={e => set('productLink', e.target.value)} required />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="imageUrl">Product Image URL * <span className={styles.hint}>(direct image URL)</span></label>
+            <input id="imageUrl" type="url" className="form-input" placeholder="https://images.unsplash.com/photo-..." value={form.imageUrl} onChange={e => set('imageUrl', e.target.value)} required />
           </div>
 
           <div className="form-group">

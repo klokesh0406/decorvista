@@ -2,30 +2,15 @@ import {
   collection, addDoc, getDocs, getDoc, doc,
   updateDoc, deleteDoc, query, where, orderBy, serverTimestamp
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from './firebase';
+import { db } from './firebase';
 import { Product } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
 
 const COLLECTION = 'products';
 
-// Upload image to Firebase Storage
-export async function uploadProductImage(file: File): Promise<string> {
-  const ext = file.name.split('.').pop();
-  const filename = `products/${uuidv4()}.${ext}`;
-  const storageRef = ref(storage, filename);
-  await uploadBytes(storageRef, file);
-  return await getDownloadURL(storageRef);
-}
-
-// Delete image from Firebase Storage
-export async function deleteProductImage(imageUrl: string): Promise<void> {
-  try {
-    const storageRef = ref(storage, imageUrl);
-    await deleteObject(storageRef);
-  } catch {
-    console.warn('Image not found in storage, skipping delete');
-  }
+// No Firebase Storage needed in the free setup.
+// Product images are stored as external image URLs in Firestore.
+export async function deleteProductImage(_imageUrl: string): Promise<void> {
+  return;
 }
 
 // Add a new product
