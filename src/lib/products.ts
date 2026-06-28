@@ -7,6 +7,37 @@ import { Product } from '@/types';
 
 const COLLECTION = 'products';
 
+function toDateString(value: unknown): string {
+  if (!value) return new Date().toISOString();
+  if (typeof value === 'string') return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === 'object' && value !== null && 'toDate' in value) {
+    try {
+      return (value as { toDate: () => Date }).toDate().toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  }
+  return new Date().toISOString();
+}
+
+function productFromDoc(document: { id: string; data: () => Record<string, unknown> }): Product {
+  const data = document.data();
+  return {
+    id: document.id,
+    productName: String(data.productName ?? ''),
+    category: String(data.category ?? ''),
+    storeName: (data.storeName as Product['storeName']) ?? 'Other',
+    productLink: String(data.productLink ?? ''),
+    imageUrl: String(data.imageUrl ?? ''),
+    description: String(data.description ?? ''),
+    price: data.price ? String(data.price) : '',
+    status: (data.status as Product['status']) ?? 'hidden',
+    createdAt: toDateString(data.createdAt),
+    updatedAt: toDateString(data.updatedAt),
+  };
+}
+
 // No Firebase Storage needed in the free setup.
 // Product images are stored as external image URLs in Firestore.
 export async function deleteProductImage(_imageUrl: string): Promise<void> {
@@ -32,14 +63,14 @@ export async function getProductsByCategory(category: string): Promise<Product[]
     orderBy('createdAt', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+  return snap.docs.map(productFromDoc);
 }
 
 // Get ALL products for admin panel
 export async function getAllProductsAdmin(): Promise<Product[]> {
   const q = query(collection(db, COLLECTION), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+  return snap.docs.map(productFromDoc);
 }
 
 // Get a single product by ID
@@ -47,7 +78,7 @@ export async function getProductById(id: string): Promise<Product | null> {
   const docRef = doc(db, COLLECTION, id);
   const snap = await getDoc(docRef);
   if (!snap.exists()) return null;
-  return { id: snap.id, ...snap.data() } as Product;
+  return productFromDoc(snap);
 }
 
 // Update a product

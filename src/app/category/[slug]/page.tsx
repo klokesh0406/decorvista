@@ -9,6 +9,11 @@ import styles from './page.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
 
+// Always fetch the latest products from Firestore when a category page opens.
+// Without this, Vercel can cache the page from the last deployment and new admin products may not show.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface Props { params: { slug: string }; }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
