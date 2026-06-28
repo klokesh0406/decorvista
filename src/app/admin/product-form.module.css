@@ -1,0 +1,105 @@
+.page {}
+.header { margin-bottom: 28px; }
+.title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--espresso);
+  margin-bottom: 4px;
+}
+.subtitle { font-size: 14px; color: var(--taupe); }
+
+.form {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* Image Section */
+.imageSection {}
+.imageLabel { font-size: 13px; font-weight: 500; color: var(--espresso); display: block; margin-bottom: 8px; }
+.imageUploadArea {
+  border: 2px dashed var(--sand);
+  border-radius: var(--radius-md);
+  background: white;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.imageUploadArea:hover { border-color: var(--gold); }
+
+.imagePreview {
+  position: relative;
+  aspect-ratio: 1;
+}
+.previewImg { object-fit: cover; }
+.removeImg {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(61,46,34,0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.removeImg:hover { background: #c0392b; }
+
+.uploadPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  gap: 10px;
+  cursor: pointer;
+  padding: 24px;
+  text-align: center;
+  color: var(--taupe);
+  font-size: 14px;
+  font-weight: 500;
+}
+.uploadHint { font-size: 11px; color: var(--linen); font-weight: 400; }
+.hiddenInput { display: none; }
+
+/* Fields */
+.fields {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 28px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.textarea { resize: vertical; min-height: 80px; }
+
+.hint { font-weight: 400; color: var(--taupe); font-size: 12px; }
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--cream);
+}
+
+@media (max-width: 768px) {
+  .form { grid-template-columns: 1fr; }
+  .imageUploadArea { max-width: 200px; }
+  .row { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,43 @@
+.main { padding: 64px 0 96px; }
+.inner { max-width: 680px; }
+.header { margin-bottom: 40px; }
+.title {
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  margin: 10px 0 12px;
+}
+.subtitle { font-size: 16px; color: var(--taupe); }
+
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+.card {
+  background: white;
+  border-radius: var(--radius-md);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-card);
+}
+.cardIcon { font-size: 32px; display: block; margin-bottom: 12px; }
+.card h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--espresso);
+  margin-bottom: 8px;
+}
+.card p { font-size: 14px; color: var(--taupe); line-height: 1.6; margin-bottom: 12px; }
+.cardLink { font-size: 14px; color: var(--gold); font-weight: 600; }
+.cardLink:hover { text-decoration: underline; }
+
+.note {
+  padding: 16px 20px;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--taupe);
+  line-height: 1.6;
+  border-left: 3px solid var(--gold);
+}
+.note strong { color: var(--espresso); }
+
+@media (max-width: 520px) {
+  .cards { grid-template-columns: 1fr; }
+}
